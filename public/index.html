@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6f2">
+  <title>Collectif — votre espace privé</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main id="login-screen" class="login-screen" hidden>
+    <section class="login-card">
+      <div class="login-brand"><span class="brand-mark">C</span><span>Collectif</span></div>
+      <div class="login-heading"><span class="eyebrow">ESPACE PRIVÉ</span><h1>Ravi de vous revoir</h1><p>Connectez-vous pour retrouver vos idées et vos ressources.</p></div>
+      <form id="login-form" class="stack-form">
+        <label for="login-username">Identifiant</label><input id="login-username" name="username" autocomplete="username" required>
+        <label for="login-password">Mot de passe</label><input id="login-password" name="password" type="password" autocomplete="current-password" required>
+        <p id="login-error" class="form-error" role="alert" hidden></p>
+        <button class="button button-primary button-full" type="submit">Se connecter <span aria-hidden="true">↗</span></button>
+      </form>
+      <p class="login-foot"><span class="lock-dot">⌑</span> Accès réservé aux membres autorisés</p>
+    </section>
+    <div class="login-aside"><span class="aside-kicker">VOTRE ESPACE DE TRAVAIL</span><h2>Tout ce qui vous inspire,<br>au même endroit.</h2><p>Notes, images, captures et documents réunis sur une toile privée.</p><div class="aside-orbit"><span class="orbit-note">Une idée à garder</span><span class="orbit-image">✳</span><span class="orbit-file">▤&nbsp; brief.pdf</span><span class="orbit-dot"></span></div></div>
+  </main>
+
+  <main id="app-shell" class="app-shell" hidden>
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="Collectif, accueil"><span class="brand-mark">C</span><span>Collectif</span></a>
+      <div class="space-switch"><span class="space-icon">◈</span><span><strong>Mon espace</strong><small>Personnel</small></span><span class="switch-caret">⌄</span></div>
+      <div class="nav-section"><span class="nav-caption">ESPACE DE TRAVAIL</span><button id="nav-home" class="nav-link" title="Accueil"><span>⌂</span><span class="nav-text">Accueil</span></button><button id="nav-whiteboards" class="nav-link active" title="Whiteboards"><span>▦</span><span class="nav-text">Whiteboards</span></button><button id="nav-recent" class="nav-link" title="Récemment ouverts"><span>◷</span><span class="nav-text">Récemment ouverts</span></button><button id="nav-favorites" class="nav-link" title="Favoris"><span>☆</span><span class="nav-text">Favoris</span></button></div>
+      <div class="sidebar-bottom"><button id="nav-settings" class="nav-link" title="Paramètres"><span>⚙</span><span class="nav-text">Paramètres</span></button><div class="profile"><span class="avatar" id="profile-avatar">TD</span><span class="profile-text"><strong id="profile-name">Membre</strong><small>Accès privé</small></span><button id="logout-button" class="icon-button" type="button" aria-label="Se déconnecter" title="Se déconnecter">↪</button></div></div>
+    </aside>
+    <section class="workspace-main">
+      <header class="topbar"><div class="breadcrumbs"><span>Whiteboards</span><span class="crumb-sep">/</span><strong>Collecte d’inspiration</strong></div><div class="topbar-actions"><button class="button button-primary" id="upload-trigger" type="button"><span>＋</span>Ajouter</button></div></header>
+      <div class="board-heading"><div><div class="heading-title"><h1>Collecte d’inspiration</h1><span class="private-badge"><span>⌑</span>Privé</span></div><p>Réunissez vos idées et vos fichiers au même endroit.</p></div><div class="member-stack" title="Espace privé"><span class="avatar avatar-small">TD</span><span class="member-caption">Vous seul·e</span></div></div>
+      <div class="toolbar" role="toolbar" aria-label="Outils du whiteboard">
+        <button class="tool-button is-active" data-tool="select" type="button"><span>⌖</span>Sélection</button><span class="tool-divider"></span>
+        <button class="tool-button" data-tool="note" type="button"><span>▧</span>Note</button><button class="tool-button" data-tool="link" type="button"><span>↗</span>Lien</button><button class="tool-button" id="toolbar-upload" type="button"><span>⇧</span>Importer</button>
+        <span class="toolbar-spacer"></span><span class="board-count" id="board-count">0 élément</span>
+      </div>
+      <div class="board-wrap"><div id="board" class="board" aria-label="Whiteboard personnel">
+        <div class="board-grid" aria-hidden="true"></div>
+        <div id="board-content" class="board-content"></div>
+        <div class="empty-state" id="empty-state"><div class="empty-illustration"><span class="empty-sheet">▤</span><span class="empty-spark">✳</span><span class="empty-note">Aa</span></div><h2>Votre toile est encore vierge</h2><p>Déposez un fichier, ajoutez une note ou collez un lien pour commencer.</p><button class="button button-primary" id="empty-add" type="button"><span>＋</span>Ajouter une ressource</button><span class="empty-tip">Vous pouvez aussi glisser-déposer vos fichiers ici</span></div>
+        <div class="drop-hint" id="drop-hint"><span>＋</span><strong>Déposez vos fichiers</strong><small>Images, captures et documents</small></div>
+        <div id="selection-bar" class="selection-bar" role="toolbar" aria-label="Actions groupées" hidden><span><strong id="selection-count">0</strong> sélectionnée(s)</span><button id="clear-selection" type="button">Annuler</button><button id="delete-selection" type="button">Supprimer</button><button id="share-selection" type="button">Partager en ZIP <span aria-hidden="true">↗</span></button></div>
+        <div class="canvas-controls"><button id="zoom-out" type="button" aria-label="Dézoomer">−</button><span id="zoom-level">100 %</span><button id="zoom-in" type="button" aria-label="Zoomer">+</button><span class="canvas-control-divider"></span><button id="fit-board" type="button" aria-label="Centrer les éléments">⤢</button></div>
+      </div></div>
+      <input id="file-input" type="file" multiple hidden>
+    </section>
+  </main>
+
+  <section id="share-screen" class="share-screen" hidden>
+    <div class="share-top-brand"><span class="brand-mark">C</span><span>Collectif</span></div>
+    <div class="share-card" id="share-card"><div class="share-symbol">⌑</div><span class="eyebrow">PARTAGE SÉCURISÉ</span><h1 id="share-title">Une ressource vous attend</h1><p id="share-description">Saisissez le mot de passe communiqué par la personne qui vous a partagé ce lien.</p>
+      <form id="share-unlock-form" class="stack-form"><label for="share-password-input">Mot de passe</label><input id="share-password-input" name="password" type="password" autocomplete="current-password" required><p id="share-error" class="form-error" role="alert" hidden></p><button class="button button-primary button-full" type="submit">Vérifier et télécharger <span aria-hidden="true">↓</span></button></form>
+      <div class="share-unlocked" id="share-unlocked" hidden><p>Mot de passe accepté. Votre téléchargement est prêt.</p><a class="button button-primary button-full" id="download-link" href="#">Télécharger la ressource <span aria-hidden="true">↓</span></a></div>
+      <p class="share-foot"><span>⌑</span> Le lien est protégé par mot de passe.</p>
+    </div><p class="share-brand-foot">Un espace privé, par Collectif</p>
+  </section>
+
+  <div id="modal-layer" class="modal-layer" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" type="button" aria-label="Fermer" data-close-modal>×</button>
+      <div class="modal-icon" id="modal-icon">✎</div><span class="eyebrow" id="modal-eyebrow">NOUVELLE RESSOURCE</span><h2 id="modal-title">Ajouter une note</h2><p class="modal-subtitle" id="modal-subtitle">Une idée rapide à garder sous la main.</p>
+      <form id="resource-form" class="stack-form"><label for="resource-title">Titre</label><input id="resource-title" maxlength="120" required><label id="resource-content-label" for="resource-content">Votre texte</label><textarea id="resource-content" rows="5" maxlength="20000" required></textarea><p id="resource-error" class="form-error" role="alert" hidden></p><div class="modal-actions"><button class="button button-quiet" type="button" data-close-modal>Annuler</button><button class="button button-primary" type="submit" id="resource-submit">Ajouter au whiteboard</button></div></form>
+    </section>
+  </div>
+
+  <div id="share-modal-layer" class="modal-layer" hidden>
+    <div class="modal-backdrop" data-close-share></div>
+    <section class="modal share-modal" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
+      <button class="modal-close" type="button" aria-label="Fermer" data-close-share>×</button><span class="eyebrow">LIEN DE TÉLÉCHARGEMENT</span><h2 id="share-modal-title">Partager cette ressource</h2><p class="modal-subtitle">Toute personne disposant du lien et du mot de passe pourra télécharger ce fichier.</p>
+      <div class="resource-summary"><span class="summary-icon" id="share-item-icon">▤</span><span><strong id="share-item-name">Ressource</strong><small id="share-item-meta"></small></span></div>
+      <div id="existing-share-links" class="existing-share-links" hidden><span><strong id="active-link-count">0</strong> lien(s) actif(s) pour cette ressource</span><button id="revoke-existing-links" class="button button-quiet" type="button">Révoquer les liens</button></div>
+      <form id="share-form" class="stack-form"><label for="share-password-create">Mot de passe à communiquer</label><div class="password-control"><input id="share-password-create" type="password" autocomplete="new-password" placeholder="" required><button id="toggle-share-password" type="button" aria-label="Afficher le mot de passe">Afficher</button></div><small class="field-hint">Ce mot de passe sera demandé avant le téléchargement.</small><p id="share-create-error" class="form-error" role="alert" hidden></p><button class="button button-primary button-full" type="submit">Générer le lien protégé</button></form>
+      <div id="share-result" class="share-result" hidden><label for="share-url-output">Lien prêt à partager</label><div class="copy-row"><input id="share-url-output" readonly><button id="copy-share-link" class="button button-quiet" type="button">Copier le lien</button></div><div class="share-secondary-actions"><button id="copy-share-password" class="button button-quiet" type="button">Copier le mot de passe</button><button id="revoke-share-link" class="button button-quiet" type="button">Révoquer le lien</button></div><p class="share-result-note">Transmettez le mot de passe séparément. La ressource ne sera téléchargée qu’après sa saisie.</p></div>
+      <p class="format-note" id="format-note" hidden>Les textes et liens partagés sont téléchargés au format <strong>.txt</strong>.</p>
+    </section>
+  </div>
+
+  <div id="settings-layer" class="modal-layer" hidden>
+    <div class="modal-backdrop" data-close-settings></div>
+    <section class="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title"><button class="modal-close" type="button" aria-label="Fermer" data-close-settings>×</button><span class="eyebrow">VOTRE ESPACE</span><h2 id="settings-title">Paramètres du compte</h2><p class="modal-subtitle">Les identifiants de connexion et le stockage des fichiers sont configurés sur le serveur Collectif.</p><div class="settings-detail"><span>Compte</span><strong id="settings-username">Membre</strong></div><div class="settings-detail"><span>Adresse</span><strong>collectif.rialet.fr</strong></div><button id="settings-logout" class="button button-quiet" type="button">Se déconnecter</button></section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
