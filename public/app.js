@@ -1,7 +1,7 @@
 const $ = selector => document.querySelector(selector);
 const board = $('#board');
 const boardContent = $('#board-content');
-const state = { items: [], selection: new Set(), viewFilter: 'all', selectedTool: 'select', zoom: 100, panX: 0, panY: 0, moving: null, activeShareItem: null, activeShareItems: [], shareAsBundle: false, activeShareToken: null, toastTimer: null };
+const state = { items: [], selection: new Set(), viewFilter: 'all', selectedTool: 'select', editingItemId: null, zoom: 100, panX: 0, panY: 0, moving: null, activeShareItem: null, activeShareItems: [], shareAsBundle: false, activeShareToken: null, toastTimer: null };
 
 function iconFor(type) {
   return ({ note: '▧', link: '↗', file: '▤', image: '▧' })[type] || '▤';
@@ -152,6 +152,13 @@ function makeCard(item) {
     const content = document.createElement('p');
     content.className = 'item-content';
     content.textContent = item.content;
+    content.title = 'Cliquer pour copier le contenu';
+    content.addEventListener('pointerdown', event => event.stopPropagation());
+    content.addEventListener('click', async event => {
+      event.stopPropagation();
+      try { await navigator.clipboard.writeText(item.content); showToast('Contenu copié dans le presse-papiers.'); }
+      catch { showToast('Copie impossible. Vérifiez les autorisations du navigateur.'); }
+    });
     body.append(content);
     if (item.type === 'note') {
       const tag = document.createElement('span');
@@ -185,7 +192,13 @@ function makeCard(item) {
   remove.type = 'button'; remove.title = 'Supprimer'; remove.setAttribute('aria-label', `Supprimer ${item.title}`); remove.className = 'delete'; remove.innerHTML = '<span aria-hidden="true">×</span><span class="action-label">Supprimer</span>';
   remove.addEventListener('pointerdown', event => event.stopPropagation());
   remove.addEventListener('click', event => { event.stopPropagation(); deleteItem(item); });
-  actions.append(share, favorite, remove);
+  if (item.type === 'note' || item.type === 'link') {
+    const edit = document.createElement('button');
+    edit.type = 'button'; edit.title = 'Modifier'; edit.setAttribute('aria-label', `Modifier ${item.title}`); edit.innerHTML = '<span aria-hidden="true">✎</span><span class="action-label">Modifier</span>';
+    edit.addEventListener('pointerdown', event => event.stopPropagation());
+    edit.addEventListener('click', event => { event.stopPropagation(); openModal(item.type, item); });
+    actions.append(share, favorite, edit, remove);
+  } else actions.append(share, favorite, remove);
   card.append(actions);
   card.addEventListener('pointerdown', startMove);
   card.addEventListener('pointermove', moveItem);
@@ -242,20 +255,22 @@ async function deleteItem(item) {
     showToast('Ressource supprimée.');
   } catch (error) { showToast(error.message); }
 }
-function openModal(type) {
+function openModal(type, item = null) {
   state.selectedTool = type;
+  state.editingItemId = item?.id || null;
   const isLink = type === 'link';
   $('#modal-icon').textContent = isLink ? '↗' : '▧';
-  $('#modal-eyebrow').textContent = isLink ? 'NOUVEAU LIEN' : 'NOUVELLE NOTE';
-  $('#modal-title').textContent = isLink ? 'Ajouter un lien' : 'Ajouter une note';
+  $('#modal-eyebrow').textContent = item ? (isLink ? 'MODIFIER LE LIEN' : 'MODIFIER LA NOTE') : (isLink ? 'NOUVEAU LIEN' : 'NOUVELLE NOTE');
+  $('#modal-title').textContent = item ? (isLink ? 'Modifier le lien' : 'Modifier la note') : (isLink ? 'Ajouter un lien' : 'Ajouter une note');
   $('#modal-subtitle').textContent = isLink ? 'Enregistrez une adresse utile sur votre whiteboard.' : 'Une idée rapide à garder sous la main.';
-  $('#resource-title').value = '';
+  $('#resource-title').value = item?.title || '';
   $('#resource-title').placeholder = isLink ? 'Ex. Références utiles' : 'Ex. Idée de collection';
   $('#resource-content-label').textContent = isLink ? 'Adresse du lien' : 'Votre texte';
-  $('#resource-content').value = '';
+  $('#resource-content').value = item?.content || '';
   $('#resource-content').placeholder = isLink ? 'https://…' : 'Écrivez votre idée…';
   $('#resource-content').rows = isLink ? 2 : 5;
   $('#resource-error').hidden = true;
+  $('#resource-submit').textContent = item ? 'Enregistrer les modifications' : 'Ajouter au whiteboard';
   $('#modal-layer').hidden = false;
   $('#resource-title').focus();
 }
@@ -382,11 +397,20 @@ $('#resource-form').addEventListener('submit', async event => {
   button.disabled = true;
   $('#resource-error').hidden = true;
   try {
-    const result = await api('/api/items', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: state.selectedTool, title: $('#resource-title').value, content: $('#resource-content').value }) });
-    state.items.push(result.item);
+    const payload = { type: state.selectedTool, title: $('#resource-title').value, content: $('#resource-content').value };
+    const editingItemId = state.editingItemId;
+    if (editingItemId) {
+      const result = await api(`/api/items/${encodeURIComponent(editingItemId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const index = state.items.findIndex(item => item.id === editingItemId);
+      if (index !== -1) state.items[index] = result.item;
+    } else {
+      const result = await api('/api/items', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      state.items.push(result.item);
+    }
     renderItems();
     $('#modal-layer').hidden = true;
-    showToast(state.selectedTool === 'link' ? 'Lien ajouté au whiteboard.' : 'Note ajoutée au whiteboard.');
+    showToast(editingItemId ? 'Modifications enregistrées.' : state.selectedTool === 'link' ? 'Lien ajouté au whiteboard.' : 'Note ajoutée au whiteboard.');
+    state.editingItemId = null;
   } catch (error) {
     $('#resource-error').textContent = error.message;
     $('#resource-error').hidden = false;

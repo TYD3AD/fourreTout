@@ -421,6 +421,14 @@ const server = http.createServer(async (req, res) => {
         if (Object.hasOwn(body, 'x')) item.x = Math.min(90, Math.max(0, Number(body.x) || 0));
         if (Object.hasOwn(body, 'y')) item.y = Math.min(85, Math.max(0, Number(body.y) || 0));
         if (typeof body.favorite === 'boolean') item.favorite = body.favorite;
+        if (['note', 'link'].includes(item.type)) {
+          if (Object.hasOwn(body, 'title')) item.title = String(body.title || '').trim().slice(0, 120) || item.title;
+          if (Object.hasOwn(body, 'content')) {
+            const content = String(body.content || '').slice(0, 20_000);
+            if (!content.trim()) return fail(res, 400, 'Ajoutez un contenu avant d’enregistrer la ressource.');
+            item.content = content;
+          }
+        }
         await persist();
         return json(res, 200, { item: itemView(item) });
       }
