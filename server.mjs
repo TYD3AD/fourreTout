@@ -334,6 +334,12 @@ const server = http.createServer(async (req, res) => {
       if (!sameOrigin(req)) return fail(res, 403, 'Origine de requête refusée.');
       if (!sessionRequired(req, res)) return;
       if (req.method === 'GET' && pathname === '/api/items') return json(res, 200, { items: state.items.map(itemView) });
+      const directDownloadRoute = pathname.match(/^\/api\/items\/([0-9a-f-]+)\/download$/i);
+      if (req.method === 'GET' && directDownloadRoute) {
+        const item = state.items.find(candidate => candidate.id === directDownloadRoute[1]);
+        if (!item) return fail(res, 404, 'Ressource introuvable.');
+        return await serveDownload(res, item);
+      }
       const revokeRoute = pathname.match(/^\/api\/shares\/([A-Za-z0-9_-]+)$/);
       if (req.method === 'DELETE' && revokeRoute) {
         const share = findShare(revokeRoute[1]);

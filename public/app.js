@@ -176,6 +176,10 @@ function makeCard(item) {
   const actions = document.createElement('div');
   actions.className = 'item-actions';
   actions.setAttribute('aria-label', 'Actions de la ressource');
+  const download = document.createElement('button');
+  download.type = 'button'; download.title = 'Télécharger'; download.setAttribute('aria-label', `Télécharger ${item.title}`); download.innerHTML = '<span aria-hidden="true">↓</span><span class="action-label">Télécharger</span>';
+  download.addEventListener('pointerdown', event => event.stopPropagation());
+  download.addEventListener('click', event => { event.stopPropagation(); window.location.href = `/api/items/${encodeURIComponent(item.id)}/download`; });
   const share = document.createElement('button');
   share.type = 'button'; share.title = 'Créer un lien protégé'; share.setAttribute('aria-label', 'Créer un lien protégé'); share.innerHTML = '<span aria-hidden="true">↗</span><span class="action-label">Partager</span>';
   share.addEventListener('pointerdown', event => event.stopPropagation());
@@ -197,8 +201,8 @@ function makeCard(item) {
     edit.type = 'button'; edit.title = 'Modifier'; edit.setAttribute('aria-label', `Modifier ${item.title}`); edit.innerHTML = '<span aria-hidden="true">✎</span><span class="action-label">Modifier</span>';
     edit.addEventListener('pointerdown', event => event.stopPropagation());
     edit.addEventListener('click', event => { event.stopPropagation(); openModal(item.type, item); });
-    actions.append(share, favorite, edit, remove);
-  } else actions.append(share, favorite, remove);
+    actions.append(download, share, favorite, edit, remove);
+  } else actions.append(download, share, favorite, remove);
   card.append(actions);
   card.addEventListener('pointerdown', startMove);
   card.addEventListener('pointermove', moveItem);
